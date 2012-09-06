@@ -1,20 +1,21 @@
-import mechanize
-import time
-import random
-
-date = time.localtime()
-months = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
-year = date[0]
-month = months[date[1]-1]
-dayofmonth = date[2]
-hour = date[3]
-minute = date[4]
-second = date[5]
+# grade checker composed of the following functions
+#   check_minerva()
+#   compare_grades()
+#   prep_mail()
+#   mail(course, friends, grade)
 
 def check_minerva():
   try:
+    import mechanize, random, re, time
+
+    with open(".settings", "r") as settings:
+      lines = [x.rstrip() for x in settings.readlines()]
+      log_file = lines[0]
+      student_id = lines[1]
+      password = lines[2]
+
     # start the browser
-    br=mechanize.Browser()
+    br = mechanize.Browser()
     br.set_handle_equiv(True)
     br.set_handle_redirect(True)
     br.set_handle_referer(True)
@@ -23,55 +24,49 @@ def check_minerva():
 
     br.select_form(name='loginform')
 
-    br.form['sid'] = "student id"
-    br.form['PIN'] = "pin"
+    br.form['sid'] = student_id
+    br.form['PIN'] = password
 
     br.method="POST"
     br.submit()
 
-    print 'logging in...'
-    time.sleep(random.uniform(1,2))
+    print 'Logging in...'
+    time.sleep(random.uniform(1,3))
 
     br.follow_link(text="Student Menu", nr=0)
-    time.sleep(random.uniform(1,2))
+    time.sleep(random.uniform(1,3))
 
     br.follow_link(text="Student Records Menu", nr=0)
-    print 'navigating to records menu...'
-    time.sleep(random.uniform(1,2))
+    print 'Navigating to "Student Records Menu"...'
+    time.sleep(random.uniform(1,3))
 
     br.follow_link(text="View Your Unofficial Transcript", nr=0)
-    print 'navigating to transcript...'
-    time.sleep(random.uniform(1,2))
+    print 'Navigating to transcript...'
+    time.sleep(random.uniform(1,3))
 
-    print 'reading html...'
+    print 'Reading html...'
     html = br.response().read()
 
-    import re
     grades = re.findall('fieldmediumtext>([^<]*)</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>[1-5]</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault">&nbsp;</TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>([A-Z][+-]?)</SPAN>', html)
 
-    with open ("grades.txt", "w") as file:
+    with open ("current_grades.txt", "w") as file:
       output = ""
       for value in grades:
         output = output + value[0] + ":" + value[1] + "|"
 
       file.write(output)
-
-    logFile = open ("/home/alex/.logs/gradechecker.log", "a")
-    dateAndTime = "%s %d %d, %2d:%02d:%02d %2s" % (month, dayOfMonth, year, 12 if hour%12==0 else hour%12, minute, second, "AM" if hour < 12 else "PM")
-    logFile.write(dateAndTime + " -> checked Minerva\n")
-    logFile.close()
   except:
-    logFile = open ("/home/alex/.logs/gradechecker.log", "a")
-    dateAndTime = "%s %d %d, %2d:%02d:%02d %2s" % (month, dayOfMonth, year, hour%12 if hour > 0 else 12, minute, second, "AM" if hour < 12 else "PM")
-    logFile.write(dateAndTime + " -> error checking Minerva\n")
-    import traceback, sys
-    traceback.print_exc(file=logFile)
-    logFile.close()
+    print "Exception!"
+    with open (log_file, "a") as log_output_file:
+      log_output_file.write(" -> error checking Minerva\n")
+      import traceback, sys
+      traceback.print_exc(file=log_output_file)
+      log_output_file.close()
 
 
-def compareGrades():
-  new = open("grades.txt", "r")
-  old = open("currentGrades.txt", "r")
+def compare_grades():
+  new = open("current_grades.txt", "r")
+  old = open("old_grades.txt", "r")
   contents_new = new.read().split("|")[:-1]
   contents_old = old.read().split("|")[:-1]
   new.close()
@@ -82,13 +77,13 @@ def compareGrades():
   if diff:
     prep_mail(diff)
     import shutil
-    shutil.copyfile("grades.txt", "currentGrades.txt")
+    shutil.copyfile("current_grades.txt", "old_grades.txt")
 
 
 def prep_mail(diff):
-  with open("friends", "r") as fp:
+  with open(".friends", "r") as fp:
     friends = dict(s.strip().split(":") for s in fp.readlines())
-  with open("courses", "r") as fp:
+  with open(".courses", "r") as fp:
     courses = dict([(c, f.split(',')) for c, f in [s.strip().split("|") for s in fp.readlines()]])
 
   for course in diff:
@@ -98,7 +93,9 @@ def prep_mail(diff):
 
 def mail(course, friends, grade):
   print "hi"
+  print "mailing %s about %s and %s" % (friends, course, grade)
 
 if __name__ == "__main__":
   # check grades
   check_minerva()
+  compare_grades()
