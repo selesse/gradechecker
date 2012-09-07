@@ -9,7 +9,7 @@ Requirements
 
 Setup
 -----
-* Create a .settings file that follows this structure:
+Create a .settings file that follows this structure:
 
     path/to/logfile
     mcgill username
@@ -19,12 +19,12 @@ Setup
 
 The gmail username and gmail password are for the email notifier.
 
-* Create a .friends file that follows this structure:
+Create a .friends file that follows this structure:
 
     name:email
     name2:email2
 
-* Create a .courses file that follows this structure:
+Create a .courses file that follows this structure:
 
     course name|comma-separated list of students
     Intro to Software|me,steve
