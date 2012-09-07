@@ -92,10 +92,25 @@ def prep_mail(diff):
     mail(course, [friends[f] for f in courses[course]], grade)
 
 def mail(course, friends, grade):
-  print "hi"
-  print "mailing %s about %s and %s" % (friends, course, grade)
+  from gmailer import gmailer
+
+  message = '''Hey
+I'm here to report that a new grade was posted on Minerva for '''
+  message += '"%s".' % course
+  message += '''Go check it out if you're interested in seeing how you did.
+
+Cheers,
+Minerva Bot'''
+
+  with open(".settings", "r") as settings:
+    lines = [x.rstrip() for x in settings.readlines()]
+    smtp_login = lines[3]
+    smtp_password = lines[4]
+
+  gmail = gmailer(smtp_login, smtp_password, "Minerva Bot")
+  gmail.send_mail(friends, "[Minerva Grade Checker] " + course, message)
 
 if __name__ == "__main__":
   # check grades
-  check_minerva()
+  #check_minerva()
   compare_grades()
