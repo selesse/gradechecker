@@ -26,5 +26,5 @@ Adding subscribers
 To add subscribers to your notifications, open the .friends file. For every
 new subscriber, add an entry for them of the form "alias:email".
 
-Then, for every course you want to subscribe them to, open the .courses file.
-Add them to every course you want (comma delimited, no spaces needed).
+All you need to do now is subscribe them to the courses. Open the .courses
+file.  Add them to every course you want (comma delimited, no spaces needed).
