@@ -1,32 +1,22 @@
 gradechecker
 ============
 
-minerva gradechecker
+The McGill Minerva grade checker. It will go check to see if you have new
+grades up on Minerva and email you and a list of subscribers if it finds
+some.
 
 Requirements
 ------------
+* bash
+* python
 * mechanize (http://pypi.python.org/packages/source/m/mechanize/mechanize-0.2.5.tar.gz)
 
 Setup
 -----
-Create a .settings file that follows this structure:
+cd into the directory
 
-    path/to/logfile
-    mcgill username
-    mcgill password
-    gmail_username
-    gmail_password
+  ./configure.sh
 
-The gmail username and gmail password are for the email notifier.
+Answer the questions, then whenever you feel like checking for grades...
 
-Create a .friends file that follows this structure:
-
-    name:email
-    name2:email2
-
-Create a .courses file that follows this structure:
-
-    course name|comma-separated list of students
-    Intro to Software|me,steve
-
-Where "course name" is what appears on the unofficial transcript page.
+  python grade_checker.py

@@ -30,6 +30,6 @@ else
     > $settings
   echo -e "me:$email" > .friends
   echo -e "\n\nGetting initial copy of grades..."
-  # run_python_first_run
+  run_python_first_run
   echo "Done."
 fi

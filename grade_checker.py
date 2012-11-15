@@ -12,12 +12,15 @@ class grade_checker:
     checker.write_grades(grades, "old_grades.txt")
 
   def get_grades(self):
+    """Get current grades from minerva, write it to current_grades."""
     (log, stud_id, password) = checker.load_settings()
     html = checker.get_html(stud_id, password)
     grades = checker.get_grades_from_html(html)
     checker.write_grades(grades)
+    return grades
 
   def load_settings(self):
+    """Load settings, set instance variables, return log, id and password."""
     with open(".settings", "r") as settings:
       lines = [x.rstrip() for x in settings.readlines()]
       self.log_file = lines[0]
@@ -25,43 +28,26 @@ class grade_checker:
       self.password = lines[2]
       self.smtp_login = lines[3]
       self.smtp_password = lines[4]
-
     return (self.log_file, self.student_id, self.password)
 
   def get_html(self, student_id, password):
+    base_url = "https://banweb.mcgill.ca/pban1/"
+
     # start the browser
     br = mechanize.Browser()
-    br.set_handle_equiv(True)
-    br.set_handle_redirect(True)
-    br.set_handle_referer(True)
-
-    br.open('https://banweb.mcgill.ca/pban1/twbkwbis.P_WWWLogin')
-
+    br.open(base_url + "twbkwbis.P_WWWLogin")
     br.select_form(name='loginform')
 
     br.form['sid'] = student_id
     br.form['PIN'] = password
 
-    br.method="POST"
-    br.submit()
+    response = br.submit()
+    if 'Authorization Failure' in response.read():
+      raise error ("Invalid McGill ID or pin.")
 
-    print 'Logging in...'
-    time.sleep(random.uniform(1,3))
+    br.open(base_url + "bzsktran.P_Display_Form?user_type=S&tran_type=V")
 
-    br.follow_link(text="Student Menu", nr=0)
-    time.sleep(random.uniform(1,3))
-
-    br.follow_link(text="Student Records Menu", nr=0)
-    print 'Navigating to "Student Records Menu"...'
-    time.sleep(random.uniform(1,3))
-
-    br.follow_link(text="View Your Unofficial Transcript", nr=0)
-    print 'Navigating to transcript...'
-    time.sleep(random.uniform(1,3))
-
-    print 'Reading html...'
-    html = br.response().read()
-    return html
+    return br.response().read()
 
   def get_grades_from_html(self, html):
       return re.findall('fieldmediumtext>([^<]*)</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>[1-5]</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault">&nbsp;</TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>([A-Z][+-]?)</SPAN>', html)
@@ -82,12 +68,9 @@ class grade_checker:
 
     diff = list(set(contents_new) - set(contents_old))
 
-    if diff:
-      self.prep_mail(diff)
-      shutil.copyfile("current_grades.txt", "old_grades.txt")
+    return diff
 
-
-  def prep_mail(self, diff):
+  def notify_recipients(self, diff):
     with open(".friends", "r") as fp:
       friends = dict(s.strip().split(":") for s in fp.readlines())
     with open(".courses", "r") as fp:
@@ -122,4 +105,9 @@ if __name__ == "__main__":
   # check grades
   checker = grade_checker()
   checker.get_grades()
-  checker.compare_grades()
+  new_grades = checker.compare_grades()
+  if new_grades:
+    checker.notify_recipients(new_grades)
+    shutil.copyfile("current_grades.txt", "old_grades.txt")
+  else:
+    print "no new grades were found"
