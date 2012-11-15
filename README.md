@@ -15,8 +15,16 @@ Setup
 -----
 cd into the directory
 
-  ./configure.sh
+    ./configure.sh
 
 Answer the questions, then whenever you feel like checking for grades...
 
-  python grade_checker.py
+    python grade_checker.py
+
+Adding subscribers
+------------------
+To add subscribers to your notifications, open the .friends file. For every
+new subscriber, add an entry for them of the form "alias:email".
+
+Then, for every course you want to subscribe them to, open the .courses file.
+Add them to every course you want (comma delimited, no spaces needed).

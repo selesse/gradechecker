@@ -5,11 +5,13 @@ class grade_checker:
   def first_run():
     """First run to generate current_grades."""
     checker = grade_checker()
-    (log_file, student_id, password) = checker.load_settings()
+    (student_id, password) = checker.load_settings()
     html = checker.get_html(student_id, password)
     grades = checker.get_grades_from_html(html)
     checker.write_grades(grades)
     checker.write_grades(grades, "old_grades.txt")
+    courses_without_grades = checker.get_courses_without_grades(html)
+    checker.write_courses(courses_without_grades)
 
   def get_grades(self):
     """Get current grades from minerva, write it to current_grades."""
@@ -23,12 +25,11 @@ class grade_checker:
     """Load settings, set instance variables, return log, id and password."""
     with open(".settings", "r") as settings:
       lines = [x.rstrip() for x in settings.readlines()]
-      self.log_file = lines[0]
-      self.student_id = lines[1]
-      self.password = lines[2]
-      self.smtp_login = lines[3]
-      self.smtp_password = lines[4]
-    return (self.log_file, self.student_id, self.password)
+      self.student_id = lines[0]
+      self.password = lines[1]
+      self.smtp_login = lines[2]
+      self.smtp_password = lines[3]
+    return (self.student_id, self.password)
 
   def get_html(self, student_id, password):
     base_url = "https://banweb.mcgill.ca/pban1/"
@@ -50,7 +51,15 @@ class grade_checker:
     return br.response().read()
 
   def get_grades_from_html(self, html):
-      return re.findall('fieldmediumtext>([^<]*)</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>[1-5]</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault">&nbsp;</TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>([A-Z][+-]?)</SPAN>', html)
+    return re.findall('fieldmediumtext>([^<]*)</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>[1-5]</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault">&nbsp;</TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>([A-Z][+-]?)</SPAN>', html)
+
+  def get_courses_without_grades(self, html):
+    return re.findall('fieldmediumtext>([^<]*)</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault"><SPAN class=fieldmediumtext>[1-5]</SPAN></TD>\s*<TD NOWRAP CLASS="dedefault">&nbsp;</TD>\s*<TD NOWRAP CLASS="dedefault">&nbsp;</TD>', html)
+
+  def write_courses(self, courses):
+    with open(".courses", "w") as file:
+      for course in courses:
+        file.write(course + "|me\n")
 
   def write_grades(self, grades, file_name="current_grades.txt"):
     with open (file_name, "w") as file:
@@ -93,6 +102,7 @@ class grade_checker:
         "",
         "Cheers,",
         "Minerva Bot",
+        "",
         "http://github.com/selesse/gradechecker"
       ])
 
