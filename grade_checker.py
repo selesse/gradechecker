@@ -15,7 +15,7 @@ class grade_checker:
 
   def get_grades(self):
     """Get current grades from minerva, write it to current_grades."""
-    (log, stud_id, password) = checker.load_settings()
+    (stud_id, password) = checker.load_settings()
     html = checker.get_html(stud_id, password)
     grades = checker.get_grades_from_html(html)
     checker.write_grades(grades)
@@ -32,7 +32,7 @@ class grade_checker:
     return (self.student_id, self.password)
 
   def get_html(self, student_id, password):
-    base_url = "https://banweb.mcgill.ca/pban1/"
+    base_url = "https://horizon.mcgill.ca/pban1/"
 
     # start the browser
     br = mechanize.Browser()
